@@ -337,7 +337,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
                                     dvd_reader_stream_cb *stream_cb )
 {
   struct stat fileinfo;
-  int ret, have_css, retval, cdir = -1;
+  int ret, have_css, cdir = -1;
   char *dev_name = NULL;
   char *path = NULL, *new_path = NULL, *path_copy = NULL;
   dvd_reader_t *ctx = calloc(1, sizeof(*ctx));
@@ -454,6 +454,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
     else
     {
       if( ( cdir  = open( ".", O_RDONLY ) ) >= 0 ) {
+        int retval;
         if( chdir( path_copy ) == -1 ) {
           goto DVDOpen_error;
         }
