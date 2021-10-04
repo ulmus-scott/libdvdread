@@ -384,7 +384,7 @@ int dvdinput_setup(void *priv, dvd_logger_cb *logcb, const char *path)
 #endif
 
   if(dvdcss_library != NULL) {
-#if defined(__OpenBSD__) && !defined(__ELF__) || defined(__OS2__)
+#ifdef __OS2__
 #define U_S "_"
 #else
 #define U_S
