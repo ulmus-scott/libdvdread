@@ -37,6 +37,7 @@
 #include "dvd_input.h"
 #include "logger.h"
 
+#include "mythdvdreadexp.h"
 
 /* The function pointers that is the exported interface of this file. */
 dvd_input_t (*dvdinput_open)  (void *, dvd_logger_cb *,
