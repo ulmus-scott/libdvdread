@@ -37,6 +37,7 @@
 #include "dvd_input.h"
 #include "logger.h"
 
+#include "libmythtv/io/mythiowrapper.h"
 #include "mythdvdreadexp.h"
 
 /* The function pointers that is the exported interface of this file. */
@@ -244,12 +245,10 @@ static dvd_input_t file_open(void *priv, dvd_logger_cb *logcb,
     free(dev);
     return NULL;
   }
-#if defined(_WIN32)
-  dev->fd = open_win32(target, O_RDONLY | O_BINARY);
-#elif defined(__OS2__)
-  dev->fd = open(target, O_RDONLY | O_BINARY);
+#if !defined(__OS2__)
+  dev->fd = MythFileOpen(target, O_RDONLY);
 #else
-  dev->fd = open(target, O_RDONLY);
+  dev->fd = mythfile_open(target, O_RDONLY | O_BINARY);
 #endif
   if(dev->fd < 0) {
     char buf[256];
@@ -303,7 +302,7 @@ static int file_seek(dvd_input_t dev, int blocks)
     /* Returns position as the number of bytes from beginning of file
      * or -1 on error
      */
-    pos = lseek(dev->fd, (off_t)blocks * (off_t)DVD_VIDEO_LB_LEN, SEEK_SET);
+    pos = MythFileSeek(dev->fd, (off_t)blocks * (off_t)DVD_VIDEO_LB_LEN, SEEK_SET);
 
     if (pos >= 0) {
       dev->ipos = pos / DVD_VIDEO_LB_LEN;
@@ -347,7 +346,7 @@ static int file_read(dvd_input_t dev, void *buffer, int blocks,
       ret = dev->stream_cb->pf_read(dev->priv, ((char*)buffer) + bytes, len);
     } else {
       /* Returns the number of bytes read or -1 on error */
-      ret = read(dev->fd, ((char*)buffer) + bytes, len);
+      ret = MythFileRead(dev->fd, ((char*)buffer) + bytes, len);
     }
 
     if(ret < 0) {
@@ -361,7 +360,7 @@ static int file_read(dvd_input_t dev, void *buffer, int blocks,
     if(ret == 0) {
       /* Nothing more to read.  Return all of the whole blocks, if any.
        * Adjust the file position back to the previous block boundary. */
-      ret = file_seek(dev, dev->ipos + blocks_read);
+      ret = file_seek(dev, dev->ipos + blocks_read, DVDINPUT_NOFLAGS);
       if(ret < 0)
         return ret;
 
@@ -387,7 +386,7 @@ static int file_close(dvd_input_t dev)
   /* close file if it was open */
 
   if (dev->fd >= 0) {
-    ret = close(dev->fd);
+    ret = MythfileClose(dev->fd);
   }
 
   free(dev);
@@ -398,7 +397,7 @@ static int file_close(dvd_input_t dev)
 /**
  * Setup read functions with either libdvdcss or minimal DVD access.
  */
-int dvdinput_setup(void *priv, dvd_logger_cb *logcb)
+int dvdinput_setup(void *priv, dvd_logger_cb *logcb, const char *path)
 {
   void *dvdcss_library = NULL;
 
@@ -484,7 +483,8 @@ int dvdinput_setup(void *priv, dvd_logger_cb *logcb)
   }
 #endif /* HAVE_DVDCSS_DVDCSS_H */
 
-  if(dvdcss_library != NULL) {
+  // CSS isn't possible over the myth:// protocol
+  if(strncmp(path, "myth://", 7) && dvdcss_library != NULL) {
     /*
     char *psz_method = getenv( "DVDCSS_METHOD" );
     char *psz_verbose = getenv( "DVDCSS_VERBOSE" );
