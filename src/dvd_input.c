@@ -28,6 +28,7 @@
 #include "dvdread/dvd_reader.h"      /* DVD_VIDEO_LB_LEN */
 #include "dvd_input.h"
 
+#include "mythdvdreadexp.h"
 
 /* The function pointers that is the exported interface of this file. */
 dvd_input_t (*dvdinput_open)  (const char *, void *, dvd_reader_stream_cb *);
@@ -53,7 +54,8 @@ int         (*dvdinput_read)  (dvd_input_t, void *, int, int);
 # else
 #   if defined(WIN32)
 /* Only needed on MINGW at the moment */
-#    include "../msvc/contrib/dlfcn.c"
+/*#    include "../msvc/contrib/dlfcn.c"*/
+#    include "libmythbase/compat.h"
 #   endif
 # endif
 
