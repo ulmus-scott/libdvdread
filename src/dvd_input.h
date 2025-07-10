@@ -29,6 +29,7 @@
 #define DVDINPUT_NOFLAGS         0
 
 #define DVDINPUT_READ_DECRYPT    (1 << 0)
+#define DVDCSS_SEEK_KEY          (1 << 1)
 
 typedef struct dvd_input_s *dvd_input_t;
 
@@ -41,7 +42,7 @@ extern dvd_input_t (*dvdinput_open)  (void *, dvd_logger_cb *,
                                       dvd_reader_stream_cb *,
                                       dvd_reader_filesystem_h *);
 extern int         (*dvdinput_close) (dvd_input_t);
-extern int         (*dvdinput_seek)  (dvd_input_t, int);
+extern int         (*dvdinput_seek)  (dvd_input_t, int, int);
 extern int         (*dvdinput_title) (dvd_input_t, int);
 extern int         (*dvdinput_read)  (dvd_input_t, void *, int, int);
 /* run to initialize DVD-Audio encryption */
