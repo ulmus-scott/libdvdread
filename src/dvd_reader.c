@@ -719,7 +719,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
 
 DVDOpen_error:
   /* If it's none of the above, screw it. */
-  Log0(ctx, "Could not open %s", path );
+  Log0(ctx, "Could not open %s", path ? path : "NULL" );
   free( path );
   free( path_copy );
   if ( cdir >= 0 )
