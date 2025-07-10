@@ -31,6 +31,8 @@
 
 typedef struct dvd_input_s *dvd_input_t;
 
+#include <sys/stat.h>
+
 #if defined( __MINGW32__ )
 #   undef  lseek
 #   define lseek  _lseeki64
