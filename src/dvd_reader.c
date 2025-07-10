@@ -57,6 +57,7 @@
 #include "dvdread_internal.h"
 #include "md5.h"
 #include "dvdread/ifo_read.h"
+#include "libmythtv/io/mythiowrapper.h"
 
 #if defined(_WIN32)
 # include <windows.h>
@@ -459,7 +460,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
   /* Try to open DVD using stream_cb functions */
   if( priv != NULL && stream_cb != NULL )
   {
-    have_css = dvdinput_setup( ctx->priv, &ctx->logcb );
+    have_css = dvdinput_setup( ctx->priv, &ctx->logcb, "" );
     ctx->rd = DVDOpenImageFile( ctx, NULL, stream_cb, have_css );
     if(!ctx->rd)
     {
@@ -477,7 +478,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
     goto DVDOpen_error;
 
   /* Try to open libdvdcss or fall back to standard functions */
-  have_css = dvdinput_setup( ctx->priv, &ctx->logcb );
+  have_css = dvdinput_setup( ctx->priv, &ctx->logcb, path );
 
 #if defined(_WIN32) || defined(__OS2__)
   /* Strip off the trailing \ if it is not a drive */
@@ -490,7 +491,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
   }
 #endif
 
-  ret = dvdstat( path, &fileinfo );
+  ret = MythFileStat( path, &fileinfo );
 
   if( ret < 0 ) {
 
@@ -553,6 +554,9 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
               /* Also WIN32 does not have symlinks, so we don't need this bit of code. */
 
     /* Resolve any symlinks and get the absolute dir name. */
+    if (!strncmp(path, "myth://", 7))
+        dev_name = strdup( path );
+    else
     {
         new_path = realpath( path_copy, NULL );
         if( new_path == NULL ) {
@@ -818,6 +822,14 @@ static int findDirFile( const char *path, const char *file, char *filename )
   DIR *dir;
   struct dirent *ent;
 
+  if (!strncmp(path, "myth://", 7) && MythFileExists(path, file))
+  {
+    sprintf( filename, "%s%s%s", path,
+            ( ( path[ strlen( path ) - 1 ] == '/' ) ? "" : "/" ),
+               file );
+    return 0;
+  }
+
   dir = opendir( path );
   if( !dir ) return -2;
 
@@ -896,7 +908,7 @@ static dvd_file_t *DVDOpenFilePath( dvd_reader_t *ctx, const char *filename )
   }
   dvd_file->ctx = ctx;
 
-  if( dvdstat( full_path, &fileinfo ) < 0 ) {
+  if( MythFileStat( full_path, &fileinfo ) < 0 ) {
     Log0(ctx, "Can't stat() %s.", filename );
     free( dvd_file );
     dvdinput_close( dev );
@@ -985,7 +997,7 @@ static dvd_file_t *DVDOpenVOBPath( dvd_reader_t *ctx, int title, int menu )
       return NULL;
     }
 
-    if( dvdstat( full_path, &fileinfo ) < 0 ) {
+    if( MythFileStat( full_path, &fileinfo ) < 0 ) {
       Log0(ctx, "Can't stat() %s.", filename );
       dvdinput_close(dev);
       free( dvd_file );
@@ -1006,7 +1018,7 @@ static dvd_file_t *DVDOpenVOBPath( dvd_reader_t *ctx, int title, int menu )
         break;
       }
 
-      if( dvdstat( full_path, &fileinfo ) < 0 ) {
+      if( MythFileStat( full_path, &fileinfo ) < 0 ) {
         Log0(ctx, "Can't stat() %s.", filename );
         break;
       }
@@ -1164,7 +1176,7 @@ static int DVDFileStatVOBPath( dvd_reader_t *dvd, int title,
   if( !findDVDFile( dvd, filename, full_path ) )
     return -1;
 
-  if( dvdstat( full_path, &fileinfo ) < 0 ) {
+  if( MythFileStat( full_path, &fileinfo ) < 0 ) {
     Log1(dvd, "Can't stat() %s.", filename );
     return -1;
   }
@@ -1180,7 +1192,7 @@ static int DVDFileStatVOBPath( dvd_reader_t *dvd, int title,
       if( !findDVDFile( dvd, filename, full_path ) )
         break;
 
-      if( dvdstat( full_path, &fileinfo ) < 0 ) {
+      if( MythFileStat( full_path, &fileinfo ) < 0 ) {
         Log1(dvd, "Can't stat() %s.", filename );
         break;
       }
@@ -1263,7 +1275,7 @@ int DVDFileStat( dvd_reader_t *reader, int titlenum,
     char full_path[ PATH_MAX + 1 ];
 
     if( findDVDFile( reader, filename, full_path ) ) {
-      if( dvdstat( full_path, &fileinfo ) < 0 )
+      if( MythFileStat( full_path, &fileinfo ) < 0 )
         Log1(reader, "Can't stat() %s.", filename );
       else {
         statbuf->size = fileinfo.st_size;

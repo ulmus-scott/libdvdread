@@ -68,6 +68,6 @@ extern int         (*dvdinput_read)  (dvd_input_t, void *, int, int);
 /**
  * Setup function accessed by dvd_reader.c.  Returns 1 if there is CSS support.
  */
-int dvdinput_setup(void *, dvd_logger_cb *);
+int dvdinput_setup(void *, dvd_logger_cb *, const char *);
 
 #endif /* LIBDVDREAD_DVD_INPUT_H */
