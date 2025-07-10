@@ -43,7 +43,7 @@
 dvd_input_t (*dvdinput_open)  (void *, dvd_logger_cb *,
                                const char *,dvd_reader_stream_cb *);
 int         (*dvdinput_close) (dvd_input_t);
-int         (*dvdinput_seek)  (dvd_input_t, int);
+int         (*dvdinput_seek)  (dvd_input_t, int, int);
 int         (*dvdinput_title) (dvd_input_t, int);
 int         (*dvdinput_read)  (dvd_input_t, void *, int, int);
 
@@ -174,10 +174,9 @@ static dvd_input_t css_open(void *priv, dvd_logger_cb *logcb,
 /**
  * seek into the device.
  */
-static int css_seek(dvd_input_t dev, int blocks)
+static int css_seek(dvd_input_t dev, int blocks, int flags)
 {
-  /* DVDINPUT_NOFLAGS should match the DVDCSS_NOFLAGS value. */
-  return DVDcss_seek(dev->dvdcss, blocks, DVDINPUT_NOFLAGS);
+  return DVDcss_seek(dev->dvdcss, blocks, flags);
 }
 
 /**
@@ -280,8 +279,9 @@ static dvd_input_t file_open(void *priv, dvd_logger_cb *logcb,
 /**
  * seek into the device.
  */
-static int file_seek(dvd_input_t dev, int blocks)
+static int file_seek(dvd_input_t dev, int blocks, int flags)
 {
+  (void)flags;
   off_t pos = -1;
 
   if(dev->ipos == blocks)
@@ -359,7 +359,7 @@ static int file_read(dvd_input_t dev, void *buffer, int blocks,
     if(ret == 0) {
       /* Nothing more to read.  Return all of the whole blocks, if any.
        * Adjust the file position back to the previous block boundary. */
-      ret = file_seek(dev, dev->ipos + blocks_read);
+      ret = file_seek(dev, dev->ipos + blocks_read, DVDINPUT_NOFLAGS);
       if(ret < 0)
         return ret;
 
