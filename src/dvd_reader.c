@@ -1210,14 +1210,14 @@ int InternalUDFReadBlocksRaw( const dvd_reader_t *device, uint32_t lb_number,
     return 0;
   }
 
-  ret = dvdinput_seek( device->dev, (int) lb_number );
+  ret = dvdinput_seek( device->dev, (int) lb_number, encrypted & DVDCSS_SEEK_KEY );
   if( ret != (int) lb_number ) {
     fprintf( stderr, "libdvdread: Can't seek to block %u\n", lb_number );
     return 0;
   }
 
   ret = dvdinput_read( device->dev, (char *) data,
-                       (int) block_count, encrypted );
+                       (int) block_count, encrypted & DVDINPUT_READ_DECRYPT );
   return ret;
 }
 
@@ -1272,7 +1272,7 @@ static int DVDReadBlocksPath( const dvd_file_t *dvd_file, unsigned int offset,
 
     if( offset < dvd_file->title_sizes[ i ] ) {
       if( ( offset + block_count ) <= dvd_file->title_sizes[ i ] ) {
-        off = dvdinput_seek( dvd_file->title_devs[ i ], (int)offset );
+        off = dvdinput_seek( dvd_file->title_devs[ i ], (int)offset, DVDINPUT_NOFLAGS );
         if( off < 0 || off != (int)offset ) {
           fprintf( stderr, "libdvdread: Can't seek to block %u\n",
                    offset );
@@ -1287,7 +1287,7 @@ static int DVDReadBlocksPath( const dvd_file_t *dvd_file, unsigned int offset,
          * (This is only true if you try and read >1GB at a time) */
 
         /* Read part 1 */
-        off = dvdinput_seek( dvd_file->title_devs[ i ], (int)offset );
+        off = dvdinput_seek( dvd_file->title_devs[ i ], (int)offset, DVDINPUT_NOFLAGS );
         if( off < 0 || off != (int)offset ) {
           fprintf( stderr, "libdvdread: Can't seek to block %u\n",
                    offset );
@@ -1304,7 +1304,7 @@ static int DVDReadBlocksPath( const dvd_file_t *dvd_file, unsigned int offset,
           return ret;
 
         /* Read part 2 */
-        off = dvdinput_seek( dvd_file->title_devs[ i + 1 ], 0 );
+        off = dvdinput_seek( dvd_file->title_devs[ i + 1 ], 0, DVDINPUT_NOFLAGS );
         if( off < 0 || off != 0 ) {
           fprintf( stderr, "libdvdread: Can't seek to block %d\n",
                    0 );
