@@ -29,7 +29,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#include "../msvc/contrib/win32_cs.h"
+#include "win32_cs.h"
 #endif
 
 #include "dvdread/dvd_reader.h"      /* DVD_VIDEO_LB_LEN */
@@ -65,8 +65,7 @@ int         (*dvdinput_read)  (dvd_input_t, void *, int, int);
 # else
 #   if defined(_WIN32)
 /* Only needed on MINGW at the moment */
-/*#    include "../msvc/contrib/dlfcn.c"*/
-#    include "libmythbase/compat.h"
+#    include "win32_dlfcn.h"
 #   endif
 # endif
 
