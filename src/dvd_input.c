@@ -29,7 +29,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#include "../msvc/contrib/win32_cs.h"
+#include "win32_cs.h"
 #endif
 
 #include "dvdread/dvd_reader.h"      /* DVD_VIDEO_LB_LEN */
