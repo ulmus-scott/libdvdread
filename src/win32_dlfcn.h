@@ -9,10 +9,16 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../include/dlfcn.h"
-#include "../include/os_types.h"
+/* These don't mean anything on windows */
+#define RTLD_NEXT      ((void *) -1l)
+#define RTLD_DEFAULT   ((void *) 0)
+#define RTLD_LAZY                                       -1
+#define RTLD_NOW                                        -1
+#define RTLD_BINDING_MASK -1
+#define RTLD_NOLOAD                             -1
+#define RTLD_GLOBAL                             -1
 
-void *dlopen(const char *module_name, int mode)
+inline void *dlopen(const char *module_name, int mode)
 {
     UINT em;
     HINSTANCE dsoh;
@@ -46,7 +52,7 @@ void *dlopen(const char *module_name, int mode)
     return (void *)dsoh;
 }
 
-char *dlerror(void)
+inline char *dlerror(void)
 {
     int len, nErrorCode;
     static char errstr[120];
@@ -83,12 +89,12 @@ char *dlerror(void)
     return errstr;
 }
 
-int dlclose(void *handle)
+inline int dlclose(void *handle)
 {
   return  FreeLibrary(handle);
 }
 
-void *dlsym(void *handle, const char *name)
+inline void *dlsym(void *handle, const char *name)
 {
   return GetProcAddress(handle, name);
 }
