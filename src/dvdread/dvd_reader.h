@@ -74,7 +74,7 @@ typedef struct dvd_file_s dvd_file_t;
 
 struct dvd_reader_stream_cb
 {
-    int ( *pf_seek )  ( void *p_stream,  uint64_t i_pos);
+    int ( *pf_seek )  ( void *p_stream, dvd_off_t i_pos);
     int ( *pf_read )  ( void *p_stream, void* buffer, int i_read);
     int ( *pf_readv ) ( void *p_stream, void *p_iovec, int i_blocks);
 };
