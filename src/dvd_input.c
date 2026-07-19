@@ -304,7 +304,7 @@ static dvd_input_t file_open(void *priv, dvd_logger_cb *logcb,
  */
 static int file_seek(dvd_input_t dev, int blocks, int flags UNUSED)
 {
-  off64_t pos = -1;
+  dvd_off_t pos = -1;
 
   if(dev->ipos == blocks)
   {
@@ -321,7 +321,7 @@ static int file_seek(dvd_input_t dev, int blocks, int flags UNUSED)
     }
   } else {
     /* Returns the offset from the start of the file or -1 on error */
-    pos = dev->fs->file_seek(dev->file, (off64_t)blocks * (off64_t)DVD_VIDEO_LB_LEN, SEEK_SET);
+    pos = dev->fs->file_seek(dev->file, blocks * (dvd_off_t)DVD_VIDEO_LB_LEN, SEEK_SET);
 
     if (pos >= 0) {
       dev->ipos = (int)(pos / DVD_VIDEO_LB_LEN);

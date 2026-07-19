@@ -81,7 +81,7 @@ static ssize_t file_read_default(void *file, char *buf, size_t size)
     return read(*(int*)file, buf, (unsigned int)size);
 }
 
-static off64_t file_seek_default(void *file, off64_t offset, int whence)
+static dvd_off_t file_seek_default(void *file, dvd_off_t offset, int whence)
 {
     return _lseeki64(*(int*)file, offset, whence);
 }

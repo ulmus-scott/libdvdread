@@ -20,11 +20,6 @@
 #ifndef DVDREAD_FILESYSTEM_H_
 #define DVDREAD_FILESYSTEM_H_
 
-/* glibc only exposes off64_t under the large file interface */
-#ifndef _LARGEFILE64_SOURCE
-#define _LARGEFILE64_SOURCE
-#endif
-
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -33,13 +28,6 @@
 #if !defined(ssize_t)
 typedef SSIZE_T ssize_t;
 #endif
-typedef __int64 off64_t;
-#elif defined(__GLIBC__)
-/* sys/types.h may have been included before _LARGEFILE64_SOURCE was defined. */
-typedef __off64_t off64_t;
-#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__) || defined (__wasm__)
-/* off_t is already 64 bit here so off64_t is not provided. */
-typedef off_t off64_t;
 #endif
 
 #define DVDREAD_NAME_MAX 255
@@ -55,10 +43,11 @@ typedef struct
 #define DVD_S_IFBLK        0060000     /* block special */
 #define DVD_S_IFREG        0100000     /* regular */
 
-/* size is fixed width so it does not depend on the caller off_t */
+/* This is fixed width so it does not depend on the caller off_t. */
+typedef int64_t dvd_off_t;
 typedef struct
 {
-    uint64_t size;
+    dvd_off_t size;
     unsigned int st_mode;
 } dvdstat_t;
 
@@ -84,7 +73,7 @@ struct dvd_reader_filesystem_s
     void    (*dir_close) (void *dir);
     void   *(*file_open) (dvd_reader_filesystem_h *fs, const char *filename);
     ssize_t (*file_read) (void *file, char *buf, size_t size);
-    off64_t (*file_seek) (void *file, off64_t offset, int whence);
+    dvd_off_t (*file_seek) (void *file, dvd_off_t offset, int whence);
     int     (*file_close)(void *file);
 };
 

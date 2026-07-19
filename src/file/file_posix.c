@@ -19,7 +19,10 @@
 
 #include "config.h"
 
-#include <assert.h>
+#if !defined(_FILE_OFFSET_BITS)
+#define _FILE_OFFSET_BITS 64
+#endif
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -40,21 +43,6 @@
 #include <dvdread/dvd_filesystem.h>
 
 #include "filesystem.h"
-
-// verify the off64_t from dvd_filesystem.h has the proper size
-static_assert(sizeof(off64_t) >= (64/8), "Bogus off64_t size");
-// verify the off_t from dvd_filesystem.h has the proper size
-static_assert(sizeof(off_t) >= (64/8), "Bogus off_t size");
-
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
-    defined(__NetBSD__) || defined(__DragonFly__) || defined (__wasm__) || \
-    (defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS >= 64)
-/* lseek handles off64_t offsets */
-#else
-# undef  lseek
-# define lseek lseek64
-#endif
-
 
 static void *file_open_default(dvd_reader_filesystem_h *fs, const char* filename)
 {
@@ -96,7 +84,7 @@ static ssize_t file_read_default(void *file, char *buf, size_t size)
     return read(*(int*)file, buf, size);
 }
 
-static off64_t file_seek_default(void *file, off64_t offset, int whence)
+static dvd_off_t file_seek_default(void *file, dvd_off_t offset, int whence)
 {
     return lseek(*(int*)file, offset, whence);
 }
