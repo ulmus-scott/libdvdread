@@ -463,7 +463,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
   /* Try to open DVD using stream_cb functions */
   if( priv != NULL && stream_cb != NULL )
   {
-    have_css = dvdinput_setup( ctx->priv, &ctx->logcb, type, "" );
+    have_css = dvdinput_setup( ctx->priv, &ctx->logcb, type );
     ctx->rd = DVDOpenImageFile( ctx, NULL, stream_cb, have_css );
     if(!ctx->rd)
         return DVDFreeContext(ctx);
@@ -479,7 +479,7 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
     goto DVDOpen_error;
 
   /* Try to open libdvdcss or fall back to standard functions */
-  have_css = dvdinput_setup( ctx->priv, &ctx->logcb, type, path );
+  have_css = dvdinput_setup( ctx->priv, &ctx->logcb, type );
 
 #if defined(_WIN32) || defined(__OS2__)
   /* Strip off the trailing \ if it is not a drive */
@@ -551,9 +551,6 @@ static dvd_reader_t *DVDOpenCommon( void *priv,
               /* Also WIN32 does not have symlinks, so we don't need this bit of code. */
 
     /* Resolve any symlinks and get the absolute dir name. */
-    if (!strncmp(path, "myth://", 7))
-        dev_name = strdup( path );
-    else
     {
         new_path = realpath( path_copy, NULL );
         if( new_path == NULL ) {
@@ -749,7 +746,7 @@ static dvd_type_t DVDProbeType( const char *ppath, void *stream,
     return ret;
   }
 
-  have_css = dvdinput_setup( ctx->priv, &ctx->logcb, DVD_V, "" );
+  have_css = dvdinput_setup( ctx->priv, &ctx->logcb, DVD_V );
 
   if (stream && stream_cb)
     ctx->rd = DVDOpenImageFile( ctx, NULL, stream_cb, have_css );

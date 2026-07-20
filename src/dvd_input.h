@@ -55,7 +55,7 @@ extern void        dvdinput_set_stream(dvd_input_t, dvd_type_t);
  * which is basically the same as calling dvdinput_setup_builtin.
  */
 /* dvda flag enabled cpxm */
-int dvdinput_setup(void *, dvd_logger_cb *, dvd_type_t dvda_flag, const char *path);
+int dvdinput_setup(void *, dvd_logger_cb *, dvd_type_t dvda_flag);
 
 /**
  * Setup function accessed by dvd_reader.c using the builtin libdvdread implementation

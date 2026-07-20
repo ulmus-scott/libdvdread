@@ -46,6 +46,7 @@
 #include "dvd_input.h"
 #include "logger.h"
 
+
 /* The function pointers that is the exported interface of this file. */
 dvd_input_t (*dvdinput_open)  (void *, dvd_logger_cb *,
                                const char *, dvd_reader_stream_cb *,
@@ -415,7 +416,7 @@ static int file_close(dvd_input_t dev)
 /**
  * Setup read functions with either libdvdcss or minimal DVD access.
  */
-int dvdinput_setup(void *priv, dvd_logger_cb *logcb, dvd_type_t dvda_flag, const char *path)
+int dvdinput_setup(void *priv, dvd_logger_cb *logcb, dvd_type_t dvda_flag)
 {
   void *dvdcss_library = NULL;
 
@@ -523,8 +524,7 @@ int dvdinput_setup(void *priv, dvd_logger_cb *logcb, dvd_type_t dvda_flag, const
   }
 #endif /* HAVE_DVDCSS_DVDCSS_H */
 
-  // CSS isn't possible over the myth:// protocol
-  if(strncmp(path, "myth://", 7) && dvdcss_library != NULL) {
+  if(dvdcss_library != NULL) {
     /*
     char *psz_method = getenv( "DVDCSS_METHOD" );
     char *psz_verbose = getenv( "DVDCSS_VERBOSE" );
