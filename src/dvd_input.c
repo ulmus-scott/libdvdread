@@ -26,6 +26,7 @@
 #include <stdlib.h>                  /* free */
 #include <string.h>                  /* strerror */
 #include <errno.h>
+#include <limits.h>
 #include <assert.h>
 
 #if defined(_WIN32)
@@ -304,7 +305,7 @@ static dvd_input_t file_open(void *priv, dvd_logger_cb *logcb,
  */
 static int file_seek(dvd_input_t dev, int blocks, int flags UNUSED)
 {
-  dvd_off_t pos = -1;
+  int pos = -1;
 
   if(dev->ipos == blocks)
   {
@@ -321,10 +322,10 @@ static int file_seek(dvd_input_t dev, int blocks, int flags UNUSED)
     }
   } else {
     /* Returns the offset from the start of the file or -1 on error */
-    pos = dev->fs->file_seek(dev->file, blocks * (dvd_off_t)DVD_VIDEO_LB_LEN, SEEK_SET);
+    dvd_off_t off = dev->fs->file_seek(dev->file, blocks * (dvd_off_t)DVD_VIDEO_LB_LEN, SEEK_SET);
 
-    if (pos >= 0) {
-      dev->ipos = (int)(pos / DVD_VIDEO_LB_LEN);
+    if (off >= 0) {
+      dev->ipos = pos = (int)(off / DVD_VIDEO_LB_LEN);
     }
   }
 
@@ -349,45 +350,46 @@ static int file_title(dvd_input_t dev UNUSED, int block UNUSED)
 static int file_read(dvd_input_t dev, void *buffer, int blocks,
                      int flags UNUSED)
 {
-  size_t len, bytes;
-  int blocks_read;
-
-  len = (size_t)blocks * DVD_VIDEO_LB_LEN;
-  bytes = 0;
-  blocks_read = 0;
+  size_t len = blocks * (size_t)DVD_VIDEO_LB_LEN;
+  ssize_t bytes = 0;
+  int blocks_read = 0;
 
   while(len > 0) {
-    ssize_t ret = -1;
+    ssize_t read_bytes = -1;
 
     /* Perform read based on the input type */
     if (dev->stream_cb) {
       /* Returns the number of bytes read or -1 on error */
-      ret = dev->stream_cb->pf_read(dev->priv, ((char*)buffer) + bytes, len);
+      if (len > INT_MAX) {
+        read_bytes = dev->stream_cb->pf_read(dev->priv, ((char*)buffer) + bytes, INT_MAX);
+      } else {
+        read_bytes = dev->stream_cb->pf_read(dev->priv, ((char*)buffer) + bytes, (int)len);
+      }
     } else {
       /* Returns the number of bytes read or -1 on error */
-      ret = dev->fs->file_read(dev->file, ((char*)buffer) + bytes, len);
+      read_bytes = dev->fs->file_read(dev->file, ((char*)buffer) + bytes, len);
     }
 
-    if(ret < 0) {
+    if(read_bytes < 0) {
       /* One of the reads failed, too bad.  We won't even bother
        * returning the reads that went OK, and as in the POSIX spec
        * the file position is left unspecified after a failure. */
       dev->ipos = -1;
-      return ret;
+      return -1;
     }
 
-    if(ret == 0) {
+    if(read_bytes == 0) {
       /* Nothing more to read.  Return all of the whole blocks, if any.
        * Adjust the file position back to the previous block boundary. */
-      ret = file_seek(dev, dev->ipos + blocks_read, DVDINPUT_NOFLAGS);
+      int ret = file_seek(dev, dev->ipos + blocks_read, DVDINPUT_NOFLAGS);
       if(ret < 0)
         return ret;
 
       return blocks_read;
     }
 
-    len -= ret;
-    bytes += ret;
+    len -= read_bytes;
+    bytes += read_bytes;
     blocks_read = (int)(bytes / DVD_VIDEO_LB_LEN);
   }
 
