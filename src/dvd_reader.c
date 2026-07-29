@@ -1494,7 +1494,7 @@ void DVDCloseFile( dvd_file_t *dvd_file )
 
 /* see DVDOpenVOBUDF for the ts_type semantics */
 static int DVDFileStatVOBUDF( dvd_reader_t *dvd, int title, int menu,
-                              dvd_type_t ts_type, dvd_stat_t *statbuf )
+                              dvd_type_t ts_type, dvd_statistics_t *statbuf )
 {
   char filename[ MAX_UDF_FILE_NAME_LEN ];
   uint32_t size;
@@ -1543,7 +1543,7 @@ static int DVDFileStatVOBUDF( dvd_reader_t *dvd, int title, int menu,
 
 /* see DVDOpenVOBUDF for the ts_type semantics */
 static int DVDFileStatVOBPath( dvd_reader_t *dvd, int title, int menu,
-                               dvd_type_t ts_type, dvd_stat_t *statbuf )
+                               dvd_type_t ts_type, dvd_statistics_t *statbuf )
 {
   char filename[ MAX_UDF_FILE_NAME_LEN ];
   char full_path[ PATH_MAX + 1 ];
@@ -1603,9 +1603,39 @@ static int DVDFileStatVOBPath( dvd_reader_t *dvd, int title, int menu,
   return 0;
 }
 
-
 int DVDFileStat( dvd_reader_t *reader, int titlenum,
                  dvd_read_domain_t domain, dvd_stat_t *statbuf )
+{
+  dvd_statistics_t stats = {0};
+  int ret = DVDFileStat2(reader, titlenum, domain, &stats);
+  if (ret == 0) {
+    if (sizeof(off_t) < 8 &&
+        (stats.size > INT_MAX
+         || stats.parts_size[0] > INT_MAX
+         || stats.parts_size[1] > INT_MAX
+         || stats.parts_size[2] > INT_MAX
+         || stats.parts_size[3] > INT_MAX
+         || stats.parts_size[4] > INT_MAX
+         || stats.parts_size[5] > INT_MAX
+         || stats.parts_size[6] > INT_MAX
+         || stats.parts_size[7] > INT_MAX
+         || stats.parts_size[8] > INT_MAX
+         )
+        ) {
+      return -1;
+    } else {
+      statbuf->size = stats.size;
+      statbuf->nr_parts = stats.nr_parts;
+      for (int i = 0; i < 9; i++) {
+        statbuf->parts_size[i] = stats.parts_size[i];
+      }
+    }
+  }
+  return ret;
+}
+
+int DVDFileStat2( dvd_reader_t *reader, int titlenum,
+                  dvd_read_domain_t domain, dvd_statistics_t *statbuf )
 {
   dvd_reader_device_t *dvd = reader->rd;
   char filename[ MAX_UDF_FILE_NAME_LEN ];

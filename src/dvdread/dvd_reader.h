@@ -109,6 +109,11 @@ typedef struct {
   int nr_parts;        /**< Number of file parts */
   off_t parts_size[9]; /**< Size of each part in bytes */
 } dvd_stat_t;
+typedef struct {
+  dvd_off_t size;          /**< Total size of file in bytes */
+  int nr_parts;            /**< Number of file parts */
+  dvd_off_t parts_size[9]; /**< Size of each part in bytes */
+} dvd_statistics_t;
 
 /**
  * Opens a block device of a DVD-ROM file, or an image file, or a directory
@@ -234,6 +239,7 @@ typedef enum {
  * int DVDFileStat(dvd, titlenum, domain, stat);
  */
 DVDREAD_API int DVDFileStat(dvd_reader_t *, int, dvd_read_domain_t, dvd_stat_t *);
+DVDREAD_API int DVDFileStat2(dvd_reader_t *, int, dvd_read_domain_t, dvd_statistics_t *);
 
 /**
  * Opens a file on the DVD given the title number and domain.
